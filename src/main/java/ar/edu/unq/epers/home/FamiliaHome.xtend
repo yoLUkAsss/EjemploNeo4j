@@ -17,7 +17,7 @@ class FamiliaHome {
 		this.graph = graph
 	}
 
-	def personLabel() {
+	private def personLabel() {
 		DynamicLabel.label("Person")
 	}
 	
