@@ -1,40 +1,36 @@
-package ar.edu.unq.epers.home
+package ar.edu.unq.epers.service
 
 import org.neo4j.graphdb.factory.GraphDatabaseFactory
 import org.neo4j.graphdb.GraphDatabaseService
 import org.eclipse.xtext.xbase.lib.Functions.Function1
 
-class Neo4JService {
+class GraphServiceRunner {
 
-	static private GraphDatabaseService _graphDb
+	static private GraphDatabaseService graphDatabaseService
 
 	static synchronized def GraphDatabaseService getGraphDb() {
-		if (_graphDb == null) {
-			_graphDb = new GraphDatabaseFactory()
+		if (graphDatabaseService == null) {
+			graphDatabaseService = new GraphDatabaseFactory()
 				.newEmbeddedDatabaseBuilder("./target/neo4j")
 				.newGraphDatabase();
-				registerShutDownHook
+				
+			  	Runtime.runtime.addShutdownHook(new Thread([graphDb.shutdown]))
 		}
-		_graphDb
+		graphDatabaseService
 	}
 	
 	static def <T> T run(Function1<GraphDatabaseService, T> command){
 		val tx = getGraphDb.beginTx
-		try{
+		try {
 			val t = command.apply(getGraphDb)
 			tx.success
 			t
-		}catch(Exception e){
+		} catch(Exception e) {
 			tx.failure
 			throw e
-		}finally{
+		} finally {
 			tx.close
 		}
 	}
 	
-	static def registerShutDownHook() {
-    	Runtime.runtime.addShutdownHook(new Thread([|
-    		graphDb.shutdown
-    	]))
-  	}
 }

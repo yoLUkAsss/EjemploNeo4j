@@ -1,6 +1,5 @@
 package ar.edu.unq.epers.service
 
-import ar.edu.unq.epers.home.FamiliaService
 import ar.edu.unq.epers.model.Persona
 import org.junit.After
 import org.junit.Assert
@@ -18,7 +17,7 @@ class FamiliaServiceTest {
 	
 	@Test
 	def void esPadre(){
-		val padres = service.pradres(hijo)
+		val padres = service.padres(hijo)
 		Assert.assertEquals(1, padres.length)
 		Assert.assertEquals(padres.head, padre)
 	}
@@ -34,11 +33,11 @@ class FamiliaServiceTest {
 	
 	@After
 	def void after(){
-		service.eliminarNodo(padre)
-		service.eliminarNodo(tio)
-		service.eliminarNodo(hijo)
-		service.eliminarNodo(primo)
-		service.eliminarNodo(primo2)
+		service.eliminarPersona(padre)
+		service.eliminarPersona(tio)
+		service.eliminarPersona(hijo)
+		service.eliminarPersona(primo)
+		service.eliminarPersona(primo2)
 	}
 	
 	
@@ -75,11 +74,11 @@ class FamiliaServiceTest {
 		];
 		
 		service = new FamiliaService
-		service.crearNodo(padre)
-		service.crearNodo(tio)
-		service.crearNodo(hijo)
-		service.crearNodo(primo)
-		service.crearNodo(primo2)
+		service.agregarPersona(padre)
+		service.agregarPersona(tio)
+		service.agregarPersona(hijo)
+		service.agregarPersona(primo)
+		service.agregarPersona(primo2)
 		service.padreDe(padre, hijo)
 		service.padreDe(tio, primo)
 		service.padreDe(tio, primo2)

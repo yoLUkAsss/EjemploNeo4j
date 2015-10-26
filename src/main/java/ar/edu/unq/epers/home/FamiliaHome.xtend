@@ -20,25 +20,36 @@ class FamiliaHome {
 	def personLabel() {
 		DynamicLabel.label("Person")
 	}
-
-	def eliminarNodo(Persona persona) {
-		val nodo = getNodo(persona)
-		nodo.relationships.forEach[delete]
-		nodo.delete
-	}
-
-	def getNodo(Persona persona) {
-		graph.findNodes(personLabel, "dni", persona.dni).head
-	}
-
+	
 	def crearNodo(Persona persona) {
-		val node = graph.createNode(personLabel)
+		val node = this.graph.createNode(personLabel)
 		node.setProperty("dni", persona.dni)
 		node.setProperty("nombre", persona.nombre)
 		node.setProperty("apellido", persona.apellido)
 	}
 
-	def crearPersona(Node nodo) {
+	def eliminarNodo(Persona persona) {
+		val nodo = this.getNodo(persona)
+		nodo.relationships.forEach[delete]
+		nodo.delete
+	}
+
+	def getNodo(Persona persona) {
+		this.getNodo(persona.dni)
+	}
+	
+	def getNodo(String dni) {
+		this.graph.findNodes(personLabel, "dni", dni).head
+	}
+	
+	def relacionar(Persona persona1, Persona persona2, TipoDeRelaciones relacion) {
+		val nodo1 = this.getNodo(persona1);
+		val nodo2 = this.getNodo(persona2);
+		nodo1.createRelationshipTo(nodo2, relacion);
+	}
+	
+	
+	private def toPersona(Node nodo) {
 		new Persona => [
 			dni = nodo.getProperty("dni") as String
 			nombre = nodo.getProperty("nombre") as String
@@ -46,46 +57,31 @@ class FamiliaHome {
 		]
 	}
 
-	def padreDe(Persona padre, Persona hijo) {
-		val padreNode = getNodo(padre)
-		val hijoNode = getNodo(hijo)
-		padreNode.createRelationshipTo(hijoNode, TipoDeRelaciones.PADRE);
-		hijoNode.createRelationshipTo(padreNode, TipoDeRelaciones.HIJO);
+	def getPadres(Persona persona) {
+		val nodoPersona = this.getNodo(persona)
+		val nodoPadres = this.nodosRelacionados(nodoPersona, TipoDeRelaciones.PADRE, Direction.INCOMING)
+		nodoPadres.map[toPersona].toSet
 	}
 
-	def hermanos(Persona hermano1, Persona hermano2) {
-		val hermano1Node = getNodo(hermano1)
-		val hermano2Node = getNodo(hermano2)
-		hermano1Node.createRelationshipTo(hermano2Node, TipoDeRelaciones.HERMANO);
-		hermano2Node.createRelationshipTo(hermano1Node, TipoDeRelaciones.HERMANO);
+	def getHermanos(Persona persona) {
+		val nodoPersona = this.getNodo(persona)
+		val nodoHermanos = this.nodosRelacionados(nodoPersona, TipoDeRelaciones.HERMANO, Direction.INCOMING)
+		nodoHermanos.map[toPersona].toSet
 	}
 
-	def padres(Persona persona) {
-		nodosRelacionados(getNodo(persona), TipoDeRelaciones.PADRE, Direction.INCOMING)
+	def getHijos(Persona persona) {
+		val nodoPersona = this.getNodo(persona)
+		val nodoPadres = this.nodosRelacionados(nodoPersona, TipoDeRelaciones.HIJO, Direction.INCOMING)
+		nodoPadres.map[toPersona].toSet
 	}
-
-	def hermanos(Persona persona) {
-		hermanos(getNodo(persona))
-	}
-
-	def hermanos(Node nodo) {
-		nodosRelacionados(nodo, TipoDeRelaciones.HERMANO, Direction.OUTGOING)
-	}
-
-	def hijos(Persona persona) {
-		hijos(getNodo(persona))
-	}
-
-	def hijos(Node nodo) {
-		nodosRelacionados(nodo, TipoDeRelaciones.HIJO, Direction.INCOMING)
+	
+	def getPrimos(Persona persona) {
+		val tios = this.getPadres(persona).map[getHermanos(it)].flatten
+		tios.map[this.getHijos(it)].flatten.toSet
 	}
 
 	protected def nodosRelacionados(Node nodo, RelationshipType tipo, Direction direccion) {
 		nodo.getRelationships(tipo, direccion).map[it.getOtherNode(nodo)]
 	}
 
-	def primosDe(Persona persona) {
-		val tios = padres(persona).map[hermanos].flatten
-		tios.map[hijos].flatten.map[crearPersona].toList
-	}
 }
